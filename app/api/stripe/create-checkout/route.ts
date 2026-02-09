@@ -35,6 +35,13 @@ export async function POST(req: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
+    if (!user) {
+      return NextResponse.json(
+        { error: "Please login to continue" },
+        { status: 401 }
+      );
+    }
+
     const { priceId, mode, successUrl, cancelUrl } = body;
 
     const { data } = await supabase
