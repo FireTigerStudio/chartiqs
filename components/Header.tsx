@@ -1,37 +1,53 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { JSX } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { User } from "@supabase/supabase-js";
+import { createClient } from "@/libs/supabase/client";
 import ButtonSignin from "./ButtonSignin";
+import ButtonAccount from "./ButtonAccount";
+import LanguageSwitcher from "./LanguageSwitcher";
+import { useTranslation } from "@/libs/i18n";
 import config from "@/config";
-
-const links: {
-  href: string;
-  label: string;
-}[] = [
-  {
-    href: "/commodities",
-    label: "Commodities",
-  },
-  {
-    href: "/#pricing",
-    label: "Pricing",
-  },
-  {
-    href: "/#faq",
-    label: "FAQ",
-  },
-];
-
-const cta: JSX.Element = <ButtonSignin extraStyle="btn-primary" />;
 
 // A header with a logo on the left, links in the center (like Pricing, etc...), and a CTA (like Get Started or Login) on the right.
 // The header is responsive, and on mobile, the links are hidden behind a burger button.
 const Header = () => {
   const searchParams = useSearchParams();
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [user, setUser] = useState<User>(null);
+  const { t } = useTranslation();
+
+  const links: {
+    href: string;
+    label: string;
+  }[] = [
+    {
+      href: "/commodities",
+      label: t("nav.commodities"),
+    },
+    {
+      href: "/#pricing",
+      label: t("nav.pricing"),
+    },
+    {
+      href: "/#faq",
+      label: t("nav.faq"),
+    },
+  ];
+
+  const supabase = createClient();
+
+  useEffect(() => {
+    const getUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+  }, [supabase]);
 
   // setIsOpen(false) when the route changes (i.e: when the user clicks on a link on mobile)
   useEffect(() => {
@@ -109,7 +125,14 @@ const Header = () => {
         </div>
 
         {/* CTA on large screens */}
-        <div className="hidden lg:flex lg:justify-end lg:flex-1">{cta}</div>
+        <div className="hidden lg:flex lg:justify-end lg:flex-1 lg:items-center lg:gap-2">
+          <LanguageSwitcher />
+          {user ? (
+            <ButtonAccount />
+          ) : (
+            <ButtonSignin extraStyle="btn-primary" />
+          )}
+        </div>
       </nav>
 
       {/* Mobile menu, show/hide based on menu state. */}
@@ -182,8 +205,15 @@ const Header = () => {
               </div>
             </div>
             <div className="divider"></div>
-            {/* Your CTA on small screens */}
-            <div className="flex flex-col">{cta}</div>
+            {/* Language switcher and CTA on small screens */}
+            <div className="flex flex-col gap-2">
+              <LanguageSwitcher />
+              {user ? (
+                <ButtonAccount />
+              ) : (
+                <ButtonSignin extraStyle="btn-primary" />
+              )}
+            </div>
           </div>
         </div>
       </div>

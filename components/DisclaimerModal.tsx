@@ -4,6 +4,7 @@ import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useEffect, useState, useCallback } from "react";
 import { createClient } from "@/libs/supabase/client";
 import toast from "react-hot-toast";
+import { useTranslation } from "@/libs/i18n";
 
 const DisclaimerModal = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,6 +12,7 @@ const DisclaimerModal = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isConfirming, setIsConfirming] = useState(false);
   const supabase = createClient();
+  const { t } = useTranslation();
 
   const checkDisclaimerStatus = useCallback(async () => {
     try {
@@ -134,7 +136,7 @@ const DisclaimerModal = () => {
                   as="h3"
                   className="text-2xl font-bold text-center mb-6 text-error"
                 >
-                  ⚠️ Important Disclaimer
+                  ⚠️ {t("disclaimerModal.title")}
                 </Dialog.Title>
 
                 <div className="space-y-4 mb-6 text-base-content/80 max-h-[60vh] overflow-y-auto">
@@ -194,7 +196,7 @@ const DisclaimerModal = () => {
 
                   <div className="bg-error/10 border border-error/30 p-4 rounded-lg">
                     <p className="text-sm font-semibold text-center text-error">
-                      Investment involves risk. Please exercise caution.
+                      {t("disclaimerModal.riskWarning")}
                     </p>
                     <p className="text-xs text-center mt-2 text-base-content/60">
                       Please ensure you fully understand the associated risks and consult professionals before making any investment decisions
@@ -211,7 +213,7 @@ const DisclaimerModal = () => {
                       className="checkbox checkbox-primary mt-1 flex-shrink-0"
                     />
                     <span className="text-sm text-base-content group-hover:text-primary transition-colors">
-                      I have carefully read and fully understand all the above disclaimer terms, acknowledge the investment risks, and agree to comply with the above terms when using this platform.
+                      {t("disclaimerModal.agreement")}
                     </span>
                   </label>
                 </div>
@@ -229,13 +231,13 @@ const DisclaimerModal = () => {
                         Confirming...
                       </>
                     ) : (
-                      "Confirm and Continue"
+                      t("disclaimerModal.confirm")
                     )}
                   </button>
                 </div>
 
                 <p className="text-xs text-center mt-4 text-base-content/40">
-                  This confirmation is required only once and will be saved to your account
+                  {t("disclaimerModal.onceOnly")}
                 </p>
               </Dialog.Panel>
             </Transition.Child>

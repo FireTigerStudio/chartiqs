@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslation } from "@/libs/i18n";
 
 interface Factor {
   name: string;
@@ -21,19 +22,21 @@ const impactColors = {
   low: "bg-yellow-400",
 };
 
-const impactLabels = {
-  high: "High Impact",
-  medium: "Medium Impact",
-  low: "Low Impact",
-};
-
-const timeHorizonLabels = {
-  short: "Short-term (Days-Weeks)",
-  medium: "Medium-term (Months-Years)",
-  long: "Long-term (5-20 Years)",
-};
-
 export default function FactorMatrix({ factors }: FactorMatrixProps) {
+  const { t } = useTranslation();
+
+  const impactLabels = {
+    high: t("matrix.highImpact"),
+    medium: t("matrix.mediumImpact"),
+    low: t("matrix.lowImpact"),
+  };
+
+  const timeHorizonLabels = {
+    short: t("matrix.shortTerm"),
+    medium: t("matrix.mediumTerm"),
+    long: t("matrix.longTerm"),
+  };
+
   // Group factors by time horizon
   const groupedFactors = useMemo(() => {
     const groups: Record<string, Factor[]> = {
@@ -80,7 +83,7 @@ export default function FactorMatrix({ factors }: FactorMatrixProps) {
               ))}
               {groupedFactors[horizon].length === 0 && (
                 <div className="text-center text-base-content/40 py-8">
-                  No factors
+                  {t("matrix.noFactors")}
                 </div>
               )}
             </div>

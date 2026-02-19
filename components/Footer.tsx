@@ -1,7 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import config from "@/config";
+import { useTranslation } from "@/libs/i18n";
 
 const Footer = () => {
+  const { t } = useTranslation();
+
   return (
     <footer className="bg-base-200 border-t border-base-content/10">
       <div className="max-w-7xl mx-auto px-8 py-24">
@@ -25,23 +30,23 @@ const Footer = () => {
               {config.appDescription}
             </p>
             <p className="mt-3 text-sm text-base-content/60">
-              Copyright © {new Date().getFullYear()}{" "}
+              {t("footer.copyright")} &copy; {new Date().getFullYear()}{" "}
               <a href="https://firetigerstudio.com/" target="_blank" rel="noopener noreferrer" className="link link-hover">FireTigerStudio</a>
-              {" "}- All rights reserved
+              {" "}- {t("footer.allRightsReserved")}
             </p>
           </div>
           <div className="flex-grow flex flex-wrap justify-center -mb-10 md:mt-0 mt-10 text-center">
             <div className="lg:w-1/3 md:w-1/2 w-full px-4">
               <div className="footer-title font-semibold text-base-content tracking-widest text-sm md:text-left mb-3">
-                Links
+                {t("footer.links")}
               </div>
 
               <div className="flex flex-col justify-center items-center md:items-start gap-2 mb-10 text-sm">
                 <Link href="/commodities" className="link link-hover">
-                  Commodities
+                  {t("footer.commodities")}
                 </Link>
                 <Link href="/#pricing" className="link link-hover">
-                  Pricing
+                  {t("footer.pricing")}
                 </Link>
                 {config.resend.supportEmail && (
                   <a
@@ -50,7 +55,7 @@ const Footer = () => {
                     className="link link-hover"
                     aria-label="Contact Support"
                   >
-                    Contact Us
+                    {t("footer.contact")}
                   </a>
                 )}
               </div>
@@ -58,15 +63,15 @@ const Footer = () => {
 
             <div className="lg:w-1/3 md:w-1/2 w-full px-4">
               <div className="footer-title font-semibold text-base-content tracking-widest text-sm md:text-left mb-3">
-                Legal
+                {t("footer.legal")}
               </div>
 
               <div className="flex flex-col justify-center items-center md:items-start gap-2 mb-10 text-sm">
                 <Link href="/tos" className="link link-hover">
-                  Terms of Service
+                  {t("footer.tos")}
                 </Link>
                 <Link href="/privacy-policy" className="link link-hover">
-                  Privacy Policy
+                  {t("footer.privacy")}
                 </Link>
               </div>
             </div>
@@ -77,7 +82,7 @@ const Footer = () => {
       {/* Disclaimer */}
       <div className="border-t border-base-content/10 py-6">
         <p className="text-center text-xs text-base-content/50 max-w-3xl mx-auto px-4">
-          Disclaimer: This platform provides educational market factor analysis only and does not constitute any investment advice. Commodities and futures trading involve high risk and may result in significant financial losses. Investment involves risk. Please exercise caution.
+          {t("disclaimer.title")}: {t("disclaimer.text")}
         </p>
       </div>
     </footer>

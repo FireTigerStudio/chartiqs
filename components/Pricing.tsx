@@ -1,18 +1,23 @@
+"use client";
+
 import config from "@/config";
 import ButtonCheckout from "./ButtonCheckout";
+import { useTranslation } from "@/libs/i18n";
 
 // <Pricing/> displays the pricing plans for your app
 // It's your Stripe config in config.js.stripe.plans[] that will be used to display the plans
 // <ButtonCheckout /> renders a button that will redirect the user to Stripe checkout called the /api/stripe/create-checkout API endpoint with the correct priceId
 
 const Pricing = () => {
+  const { t } = useTranslation();
+
   return (
     <section className="bg-base-200 overflow-hidden" id="pricing">
       <div className="py-24 px-8 max-w-5xl mx-auto">
         <div className="flex flex-col text-center w-full mb-20">
-          <p className="font-medium text-primary mb-8">Pricing</p>
+          <p className="font-medium text-primary mb-8">{t("pricing.label")}</p>
           <h2 className="font-bold text-3xl lg:text-5xl tracking-tight">
-            Choose the plan that&apos;s right for you
+            {t("pricing.title")}
           </h2>
         </div>
 
@@ -24,7 +29,7 @@ const Pricing = () => {
                   <span
                     className={`badge text-xs text-primary-content font-semibold border-0 bg-primary`}
                   >
-                    BEST VALUE
+                    {t("pricing.bestValue")}
                   </span>
                 </div>
               )}
@@ -62,7 +67,7 @@ const Pricing = () => {
                   </p>
                   <div className="flex flex-col justify-end mb-[4px]">
                     <p className="text-xs text-base-content/60 font-semibold">
-                      USD
+                      {t("pricing.currency")}
                     </p>
                   </div>
                 </div>
@@ -83,7 +88,7 @@ const Pricing = () => {
                           />
                         </svg>
 
-                        <span>{feature.name} </span>
+                        <span>{t(feature.name)} </span>
                       </li>
                     ))}
                   </ul>
@@ -92,7 +97,7 @@ const Pricing = () => {
                   <ButtonCheckout priceId={plan.priceId} mode="subscription" />
 
                   <p className="flex items-center justify-center gap-2 text-sm text-center text-base-content/80 font-medium relative">
-                    3-day free trial, cancel anytime
+                    {t("pricing.trial")}
                   </p>
                 </div>
               </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { useTranslation } from "@/libs/i18n";
 
 interface Factor {
   name: string;
@@ -23,6 +24,7 @@ interface AIChatProps {
 }
 
 export default function AIChat({ symbol, commodityName, factors }: AIChatProps) {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -74,7 +76,7 @@ export default function AIChat({ symbol, commodityName, factors }: AIChatProps) 
         ...prev,
         {
           role: "assistant",
-          content: err instanceof Error ? err.message : "Sorry, an error occurred. Please try again later.",
+          content: err instanceof Error ? err.message : t("chat.error"),
         },
       ]);
     } finally {
@@ -83,9 +85,9 @@ export default function AIChat({ symbol, commodityName, factors }: AIChatProps) 
   };
 
   const suggestedQuestions = [
-    `What are the main factors affecting ${commodityName}?`,
-    "How does inflation affect commodity prices?",
-    "How does supply and demand work?",
+    t("chat.suggestedQ1", { commodity: commodityName }),
+    t("chat.suggestedQ2"),
+    t("chat.suggestedQ3"),
   ];
 
   return (
@@ -95,7 +97,7 @@ export default function AIChat({ symbol, commodityName, factors }: AIChatProps) 
         {messages.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-base-content/60 mb-4">
-              Have any questions about {commodityName} for AI?
+              {t("chat.askAI", { commodity: commodityName })}
             </p>
             <div className="space-y-2">
               {suggestedQuestions.map((q, idx) => (
@@ -141,7 +143,7 @@ export default function AIChat({ symbol, commodityName, factors }: AIChatProps) 
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={limitReached ? "Daily question limit reached" : "Type your question..."}
+          placeholder={limitReached ? t("chat.limitReached") : t("chat.placeholder")}
           className="input input-bordered flex-1"
           disabled={loading || limitReached}
         />
@@ -150,13 +152,13 @@ export default function AIChat({ symbol, commodityName, factors }: AIChatProps) 
           className="btn btn-primary"
           disabled={loading || !input.trim() || limitReached}
         >
-          {loading ? <span className="loading loading-spinner loading-sm"></span> : "Send"}
+          {loading ? <span className="loading loading-spinner loading-sm"></span> : t("chat.send")}
         </button>
       </form>
 
       {limitReached && (
         <p className="text-xs text-error mt-2 text-center">
-          Daily free questions exhausted. <a href="/#pricing" className="link">Upgrade to Premium</a> for more questions.
+          {t("chat.freeLimitHit")} <a href="/#pricing" className="link">Upgrade to Premium</a>
         </p>
       )}
     </div>

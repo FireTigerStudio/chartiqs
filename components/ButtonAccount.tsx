@@ -6,6 +6,7 @@ import { Popover, Transition } from "@headlessui/react";
 import { User } from "@supabase/supabase-js";
 import { createClient } from "@/libs/supabase/client";
 import apiClient from "@/libs/api";
+import { useTranslation } from "@/libs/i18n";
 
 // A button to show user some account actions
 //  1. Billing: open a Stripe Customer Portal to manage their billing (cancel subscription, update payment method, etc.).
@@ -17,6 +18,8 @@ const ButtonAccount = () => {
 	const supabase = createClient();
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [user, setUser] = useState<User>(null);
+	const [hasCustomerId, setHasCustomerId] = useState<boolean>(false);
+	const { t } = useTranslation();
 
 	useEffect(() => {
 		const getUser = async () => {
@@ -25,6 +28,15 @@ const ButtonAccount = () => {
 			} = await supabase.auth.getUser();
 
 			setUser(user);
+
+			if (user) {
+				const { data: profile } = await supabase
+					.from("profiles")
+					.select("customer_id")
+					.eq("id", user.id)
+					.single();
+				setHasCustomerId(!!profile?.customer_id);
+			}
 		};
 
 		getUser();
@@ -76,7 +88,7 @@ const ButtonAccount = () => {
 
 						{user?.user_metadata?.name ||
 							user?.email?.split("@")[0] ||
-							"Account"}
+							t("account.fallbackName")}
 
 						{isLoading ? (
 							<span className="loading loading-spinner loading-xs"></span>
@@ -108,6 +120,7 @@ const ButtonAccount = () => {
 						<Popover.Panel className="absolute left-0 z-10 mt-3 w-screen max-w-[16rem] transform">
 							<div className="overflow-hidden rounded-xl shadow-xl ring-1 ring-base-content/10 bg-base-100 p-1">
 								<div className="space-y-0.5 text-sm">
+									{hasCustomerId && (
 									<button
 										className="flex items-center gap-2 hover:bg-base-300 duration-200 py-1.5 px-4 w-full rounded-lg font-medium"
 										onClick={handleBilling}
@@ -124,8 +137,9 @@ const ButtonAccount = () => {
 												clipRule="evenodd"
 											/>
 										</svg>
-										Billing
+										{t("account.billing")}
 									</button>
+								)}
 									<button
 										className="flex items-center gap-2 hover:bg-error/20 hover:text-error duration-200 py-1.5 px-4 w-full rounded-lg font-medium"
 										onClick={handleSignOut}
@@ -147,7 +161,7 @@ const ButtonAccount = () => {
 												clipRule="evenodd"
 											/>
 										</svg>
-										Logout
+										{t("account.logout")}
 									</button>
 								</div>
 							</div>
