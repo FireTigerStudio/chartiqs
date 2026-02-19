@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createClient } from "@/libs/supabase/server";
 import { createServiceClient } from "@/libs/supabase/server";
 import { aiConfig } from "@/config";
@@ -28,6 +29,12 @@ export async function POST(request: Request) {
     }
 
     const serviceSupabase = createServiceClient();
+    const cookieStore = await cookies();
+    const lang = cookieStore.get("lang")?.value || "en";
+    const languageInstruction = lang === "zh"
+      ? "Respond entirely in Chinese (Simplified)."
+      : "Respond entirely in English.";
+
     const { symbol, question, context } = await request.json();
 
     if (!question || question.trim().length === 0) {
@@ -92,7 +99,7 @@ export async function POST(request: Request) {
 
     // Check Q&A cache (normalize question for better cache hits)
     const normalizedQuestion = question.trim().toLowerCase().replace(/\s+/g, " ");
-    const cacheKey = `CHAT:${symbol}:${simpleHash(normalizedQuestion)}`;
+    const cacheKey = `CHAT:${symbol}:${lang}:${simpleHash(normalizedQuestion)}`;
 
     const { data: cached } = await serviceSupabase
       .from("analysis_cache")
@@ -114,7 +121,7 @@ export async function POST(request: Request) {
     }
 
     // Build Gemini prompt
-    const commodityName = instrument.name;
+    const commodityName = lang === "zh" && instrument.name_zh ? instrument.name_zh : instrument.name;
     const prompt = `You are an educational consultant for commodity markets. The user is viewing impact factor analysis for ${commodityName}.
 
 Current factor matrix:
@@ -128,6 +135,7 @@ Requirements:
 3. Do not give buy/sell recommendations
 4. Keep answer within 200 words
 5. If the question involves specific investment advice, politely decline and guide the user to ask other questions
+6. ${languageInstruction}
 
 Tone: Professional but friendly, like a teacher educating a student`;
 

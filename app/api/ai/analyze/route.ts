@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createClient, createServiceClient } from "@/libs/supabase/server";
 import { aiConfig } from "@/config";
 import { getInstrumentBySymbol } from "@/libs/instruments";
@@ -25,11 +26,19 @@ export async function POST(request: Request) {
 
     const serviceSupabase = createServiceClient();
 
+    // Read language preference
+    const cookieStore = await cookies();
+    const lang = cookieStore.get("lang")?.value || "en";
+    const languageInstruction = lang === "zh"
+      ? "Respond entirely in Chinese (Simplified)."
+      : "Respond entirely in English.";
+    const cacheSymbol = `${symbol}:${lang}`;
+
     // Check cache (service client bypasses RLS — analysis_cache has no user INSERT policy)
     const { data: cached } = await serviceSupabase
       .from("analysis_cache")
       .select("*")
-      .eq("symbol", symbol)
+      .eq("symbol", cacheSymbol)
       .gt("expires_at", new Date().toISOString())
       .order("created_at", { ascending: false })
       .limit(1)
@@ -44,7 +53,7 @@ export async function POST(request: Request) {
     }
 
     // Call Gemini API
-    const commodityName = instrument.name;
+    const commodityName = lang === "zh" && instrument.name_zh ? instrument.name_zh : instrument.name;
     const prompt = `You are a professional commodity market analyst. Analyze the key price impact factors for ${commodityName}.
 
 Requirements:
@@ -53,12 +62,13 @@ Requirements:
 3. Classify by impact level: high, medium, low
 4. Provide a brief description for each factor (within 50 words)
 5. Assess importance weight (1-10)
+6. ${languageInstruction}
 
 Output JSON format (without markdown code block markers):
 {
   "factors": [
     {
-      "name": "Factor Name in English",
+      "name": "Factor Name",
       "nameEn": "Factor Name in English",
       "impact": "high or medium or low",
       "timeHorizon": "short or medium or long",
@@ -112,7 +122,7 @@ Important: Do not give buy/sell recommendations, only analyze impact factors. Ou
     const expiresAt = new Date(Date.now() + aiConfig.cacheHours * 60 * 60 * 1000).toISOString();
 
     await serviceSupabase.from("analysis_cache").insert({
-      symbol,
+      symbol: cacheSymbol,
       analysis_data: analysisData,
       generated_at: generatedAt,
       expires_at: expiresAt,

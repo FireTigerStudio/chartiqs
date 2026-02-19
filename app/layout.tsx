@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { Inter } from "next/font/google";
+import { cookies } from "next/headers";
 import { Viewport } from "next";
 import { getSEOTags } from "@/libs/seo";
 import ClientLayout from "@/components/LayoutClient";
@@ -19,10 +20,13 @@ export const viewport: Viewport = {
 // You can override them in each page passing params to getSOTags() function.
 export const metadata = getSEOTags();
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+	const cookieStore = await cookies();
+	const lang = cookieStore.get("lang")?.value || "en";
+
 	return (
 		<html
-			lang="en"
+			lang={lang}
 			data-theme={config.colors.theme}
 			className={font.className}
 		>
