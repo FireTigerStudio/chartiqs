@@ -107,7 +107,52 @@ DROP POLICY IF EXISTS "Users can insert own confirmation" ON disclaimer_confirma
 CREATE POLICY "Users can insert own confirmation" ON disclaimer_confirmations
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
--- 8. Cleanup expired cache function (optional, for scheduled jobs)
+-- 8. Atomic increment for AI usage tracking (avoids race conditions)
+CREATE OR REPLACE FUNCTION increment_question_count(p_user_id UUID, p_date DATE)
+RETURNS void AS $$
+BEGIN
+  INSERT INTO ai_usage (user_id, date, question_count)
+  VALUES (p_user_id, p_date, 1)
+  ON CONFLICT (user_id, date)
+  DO UPDATE SET question_count = ai_usage.question_count + 1;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 9. Instruments table (scalable instrument storage)
+CREATE TABLE IF NOT EXISTS instruments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  symbol TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  name_zh TEXT,
+  category TEXT NOT NULL DEFAULT 'commodity',
+  tv_symbol TEXT NOT NULL,
+  icon TEXT,
+  is_active BOOLEAN DEFAULT TRUE,
+  sort_order INT DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_instruments_category ON instruments(category);
+CREATE INDEX IF NOT EXISTS idx_instruments_active ON instruments(is_active) WHERE is_active = TRUE;
+
+ALTER TABLE instruments ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can read active instruments" ON instruments;
+CREATE POLICY "Anyone can read active instruments" ON instruments
+  FOR SELECT USING (is_active = TRUE);
+
+-- Seed instruments
+INSERT INTO instruments (symbol, name, name_zh, category, tv_symbol, icon, sort_order) VALUES
+  ('GOLD',        'Gold',           '黄金',    'commodity', 'CMCMARKETS:GOLD',        '🥇', 1),
+  ('SILVER',      'Silver',         '白银',    'commodity', 'CMCMARKETS:SILVER',      '🥈', 2),
+  ('COPPER',      'Copper',         '铜',      'commodity', 'CMCMARKETS:COPPER',      '🔶', 3),
+  ('CRUDE_OIL',   'WTI Crude Oil',  'WTI原油', 'commodity', 'CMCMARKETS:USCRUDEOIL',  '🛢️', 4),
+  ('NATURAL_GAS', 'Natural Gas',    '天然气',  'commodity', 'CMCMARKETS:USNATGAS',    '🔥', 5),
+  ('SOYBEAN',     'Soybean',        '大豆',    'commodity', 'CMCMARKETS:SOYBEAN1!',   '🫘', 6)
+ON CONFLICT (symbol) DO NOTHING;
+
+-- 10. Cleanup expired cache function (optional, for scheduled jobs)
 CREATE OR REPLACE FUNCTION cleanup_expired_cache()
 RETURNS void AS $$
 BEGIN
