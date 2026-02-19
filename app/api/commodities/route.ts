@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { commodities } from "@/config";
+import { getActiveInstruments } from "@/libs/instruments";
 
 export async function GET() {
-  return NextResponse.json(commodities);
+  const instruments = await getActiveInstruments();
+  return NextResponse.json(instruments);
 }

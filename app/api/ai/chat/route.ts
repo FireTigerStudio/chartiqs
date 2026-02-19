@@ -1,19 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/libs/supabase/server";
 import { createServiceClient } from "@/libs/supabase/server";
-import { aiConfig, commodities } from "@/config";
+import { aiConfig } from "@/config";
+import { getInstrumentBySymbol } from "@/libs/instruments";
 
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
-
-// Commodity name mapping
-const commodityNames: Record<string, string> = {
-  GOLD: "Gold",
-  SILVER: "Silver",
-  COPPER: "Copper",
-  CRUDE_OIL: "WTI Crude Oil",
-  NATURAL_GAS: "Natural Gas",
-  SOYBEAN: "Soybean",
-};
 
 // Simple hash for cache key
 function simpleHash(str: string): string {
@@ -44,8 +35,8 @@ export async function POST(request: Request) {
     }
 
     // Check commodity
-    const commodity = commodities.find((c) => c.symbol === symbol);
-    if (!commodity) {
+    const instrument = await getInstrumentBySymbol(symbol);
+    if (!instrument) {
       return NextResponse.json({ error: "Invalid commodity code" }, { status: 400 });
     }
 
@@ -123,7 +114,7 @@ export async function POST(request: Request) {
     }
 
     // Build Gemini prompt
-    const commodityName = commodityNames[symbol] || symbol;
+    const commodityName = instrument.name;
     const prompt = `You are an educational consultant for commodity markets. The user is viewing impact factor analysis for ${commodityName}.
 
 Current factor matrix:

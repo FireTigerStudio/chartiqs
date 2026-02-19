@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { createClient } from "@/libs/supabase/server";
-import { commodities } from "@/config";
+import { getActiveInstruments } from "@/libs/instruments";
 import ButtonAccount from "@/components/ButtonAccount";
 
 export const dynamic = "force-dynamic";
 
 export default async function Dashboard() {
   const supabase = await createClient();
+  const instruments = await getActiveInstruments();
 
   const {
     data: { user },
@@ -60,15 +61,15 @@ export default async function Dashboard() {
         <div>
           <h2 className="text-xl font-semibold mb-4">Analyze a Commodity</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {commodities.map((c) => (
+            {instruments.map((instrument) => (
               <Link
-                key={c.symbol}
-                href={`/commodities/${c.symbol}`}
+                key={instrument.symbol}
+                href={`/commodities/${instrument.symbol}`}
                 className="card bg-base-200 hover:bg-base-300 transition-colors"
               >
                 <div className="card-body items-center text-center p-4">
-                  <span className="text-3xl">{c.icon}</span>
-                  <span className="text-sm font-medium">{c.name}</span>
+                  <span className="text-3xl">{instrument.icon}</span>
+                  <span className="text-sm font-medium">{instrument.name}</span>
                 </div>
               </Link>
             ))}

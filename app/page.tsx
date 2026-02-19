@@ -3,9 +3,10 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Pricing from "@/components/Pricing";
 import Footer from "@/components/Footer";
-import { commodities } from "@/config";
+import { getActiveInstruments } from "@/libs/instruments";
 
-export default function Page() {
+export default async function Page() {
+  const instruments = await getActiveInstruments();
   return (
     <>
       <Suspense>
@@ -245,15 +246,15 @@ export default function Page() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-              {commodities.map((commodity) => (
+              {instruments.map((instrument) => (
                 <Link
-                  key={commodity.symbol}
+                  key={instrument.symbol}
                   href="/commodities"
                   className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
                 >
                   <div className="card-body items-center text-center p-6">
-                    <div className="text-5xl mb-3">{commodity.icon}</div>
-                    <h3 className="font-bold text-lg">{commodity.name}</h3>
+                    <div className="text-5xl mb-3">{instrument.icon}</div>
+                    <h3 className="font-bold text-lg">{instrument.name}</h3>
                   </div>
                 </Link>
               ))}

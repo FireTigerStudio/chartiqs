@@ -1,33 +1,32 @@
 import { NextResponse } from "next/server";
-import { createServiceClient } from "@/libs/supabase/server";
-import { commodities, aiConfig } from "@/config";
+import { createClient, createServiceClient } from "@/libs/supabase/server";
+import { aiConfig } from "@/config";
+import { getInstrumentBySymbol } from "@/libs/instruments";
 
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
-// Commodity name mapping
-const commodityNames: Record<string, string> = {
-  GOLD: "Gold",
-  SILVER: "Silver",
-  COPPER: "Copper",
-  CRUDE_OIL: "WTI Crude Oil",
-  NATURAL_GAS: "Natural Gas",
-  SOYBEAN: "Soybean",
-};
-
 export async function POST(request: Request) {
   try {
+    const supabase = await createClient();
+
+    // Authenticate user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Please log in first" }, { status: 401 });
+    }
+
     const { symbol } = await request.json();
 
     // Validate commodity
-    const commodity = commodities.find((c) => c.symbol === symbol);
-    if (!commodity) {
+    const instrument = await getInstrumentBySymbol(symbol);
+    if (!instrument) {
       return NextResponse.json({ error: "Invalid commodity code" }, { status: 400 });
     }
 
-    const supabase = createServiceClient();
+    const serviceSupabase = createServiceClient();
 
-    // Check cache
-    const { data: cached } = await supabase
+    // Check cache (service client bypasses RLS — analysis_cache has no user INSERT policy)
+    const { data: cached } = await serviceSupabase
       .from("analysis_cache")
       .select("*")
       .eq("symbol", symbol)
@@ -45,7 +44,7 @@ export async function POST(request: Request) {
     }
 
     // Call Gemini API
-    const commodityName = commodityNames[symbol] || symbol;
+    const commodityName = instrument.name;
     const prompt = `You are a professional commodity market analyst. Analyze the key price impact factors for ${commodityName}.
 
 Requirements:
@@ -112,7 +111,7 @@ Important: Do not give buy/sell recommendations, only analyze impact factors. Ou
     const generatedAt = new Date().toISOString();
     const expiresAt = new Date(Date.now() + aiConfig.cacheHours * 60 * 60 * 1000).toISOString();
 
-    await supabase.from("analysis_cache").insert({
+    await serviceSupabase.from("analysis_cache").insert({
       symbol,
       analysis_data: analysisData,
       generated_at: generatedAt,
