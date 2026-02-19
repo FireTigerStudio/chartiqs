@@ -158,7 +158,7 @@ export default function AIChat({ symbol, commodityName, factors }: AIChatProps) 
 
       {limitReached && (
         <p className="text-xs text-error mt-2 text-center">
-          {t("chat.freeLimitHit")} <a href="/#pricing" className="link">Upgrade to Premium</a>
+          {t("chat.freeLimitHit")}
         </p>
       )}
     </div>

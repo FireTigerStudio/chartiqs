@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
 import apiClient from "@/libs/api";
 import TradingViewChart from "@/components/TradingViewChart";
