@@ -36,6 +36,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Please log in first" }, { status: 401 });
     }
 
+    const serviceSupabase = createServiceClient();
     const { symbol, question, context } = await request.json();
 
     if (!question || question.trim().length === 0) {
@@ -75,7 +76,6 @@ export async function POST(request: Request) {
           error: isPaid
             ? "Daily question limit reached, please come back tomorrow"
             : "Daily free question limit reached, upgrade to get more",
-          remainingQuestions: 0,
         },
         { status: 429 }
       );
@@ -92,18 +92,16 @@ export async function POST(request: Request) {
     const isForbidden = forbiddenPatterns.some((pattern) => pattern.test(question));
     if (isForbidden) {
       // Update usage count (even if rejected, it counts as one question)
-      await updateUsage(supabase, user.id, today, currentCount);
+      await updateUsage(serviceSupabase, user.id, today);
 
       return NextResponse.json({
         answer: "Sorry, I cannot provide specific investment advice (such as buy/sell recommendations, price predictions, etc.). I can help you understand market factors and fundamental concepts. Please try asking a different question.",
-        remainingQuestions: dailyLimit - currentCount - 1,
       });
     }
 
     // Check Q&A cache (normalize question for better cache hits)
     const normalizedQuestion = question.trim().toLowerCase().replace(/\s+/g, " ");
     const cacheKey = `CHAT:${symbol}:${simpleHash(normalizedQuestion)}`;
-    const serviceSupabase = createServiceClient();
 
     const { data: cached } = await serviceSupabase
       .from("analysis_cache")
@@ -116,11 +114,10 @@ export async function POST(request: Request) {
 
     if (cached) {
       // Cache hit — still count as a question
-      await updateUsage(supabase, user.id, today, currentCount);
+      await updateUsage(serviceSupabase, user.id, today);
 
       return NextResponse.json({
         answer: cached.analysis_data.answer,
-        remainingQuestions: dailyLimit - currentCount - 1,
         fromCache: true,
       });
     }
@@ -177,11 +174,10 @@ Tone: Professional but friendly, like a teacher educating a student`;
     });
 
     // Update usage count
-    await updateUsage(supabase, user.id, today, currentCount);
+    await updateUsage(serviceSupabase, user.id, today);
 
     return NextResponse.json({
       answer,
-      remainingQuestions: dailyLimit - currentCount - 1,
     });
   } catch (error) {
     console.error("Chat error:", error);
@@ -189,18 +185,9 @@ Tone: Professional but friendly, like a teacher educating a student`;
   }
 }
 
-async function updateUsage(supabase: any, userId: string, date: string, currentCount: number) {
-  if (currentCount === 0) {
-    await supabase.from("ai_usage").insert({
-      user_id: userId,
-      date,
-      question_count: 1,
-    });
-  } else {
-    await supabase
-      .from("ai_usage")
-      .update({ question_count: currentCount + 1 })
-      .eq("user_id", userId)
-      .eq("date", date);
-  }
+async function updateUsage(serviceSupabase: any, userId: string, date: string) {
+  await serviceSupabase.rpc("increment_question_count", {
+    p_user_id: userId,
+    p_date: date,
+  });
 }

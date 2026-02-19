@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/libs/supabase/server";
-import { commodities, aiConfig } from "@/config";
+import { commodities } from "@/config";
 import ButtonAccount from "@/components/ButtonAccount";
 
 export const dynamic = "force-dynamic";
@@ -19,18 +19,6 @@ export default async function Dashboard() {
     .single();
 
   const isPaid = profile?.has_access || false;
-  const dailyLimit = isPaid ? aiConfig.paidQuestionsPerDay : aiConfig.freeQuestionsPerDay;
-
-  const today = new Date().toISOString().split("T")[0];
-  const { data: usage } = await supabase
-    .from("ai_usage")
-    .select("question_count")
-    .eq("user_id", user!.id)
-    .eq("date", today)
-    .single();
-
-  const used = usage?.question_count || 0;
-  const remaining = Math.max(0, dailyLimit - used);
 
   return (
     <main className="min-h-screen bg-base-100">
@@ -42,7 +30,7 @@ export default async function Dashboard() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="stat bg-base-200 rounded-lg">
             <div className="stat-title">Plan</div>
             <div className="stat-value text-lg">
@@ -58,15 +46,13 @@ export default async function Dashboard() {
           </div>
 
           <div className="stat bg-base-200 rounded-lg">
-            <div className="stat-title">Questions Today</div>
-            <div className="stat-value text-lg">{used} / {dailyLimit}</div>
-            <div className="stat-desc">{remaining} remaining</div>
-          </div>
-
-          <div className="stat bg-base-200 rounded-lg">
-            <div className="stat-title">Daily Limit</div>
-            <div className="stat-value text-lg">{dailyLimit}</div>
-            <div className="stat-desc">per day</div>
+            <div className="stat-title">AI Questions</div>
+            <div className="stat-value text-lg">
+              {isPaid ? "Unlimited" : "Free tier"}
+            </div>
+            <div className="stat-desc">
+              {isPaid ? "50 questions per day" : "3 questions per day"}
+            </div>
           </div>
         </div>
 

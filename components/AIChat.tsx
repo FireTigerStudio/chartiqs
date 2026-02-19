@@ -26,25 +26,8 @@ export default function AIChat({ symbol, commodityName, factors }: AIChatProps) 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [remainingQuestions, setRemainingQuestions] = useState<number | null>(null);
+  const [limitReached, setLimitReached] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Fetch remaining questions
-  useEffect(() => {
-    fetchUsage();
-  }, []);
-
-  const fetchUsage = async () => {
-    try {
-      const res = await fetch("/api/ai/usage");
-      if (res.ok) {
-        const data = await res.json();
-        setRemainingQuestions(data.remaining);
-      }
-    } catch (err) {
-      console.error("Failed to fetch usage:", err);
-    }
-  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -76,12 +59,16 @@ export default function AIChat({ symbol, commodityName, factors }: AIChatProps) 
 
       const data = await res.json();
 
+      if (res.status === 429) {
+        setLimitReached(true);
+        throw new Error(data.error || "Daily question limit reached");
+      }
+
       if (!res.ok) {
         throw new Error(data.error || "Request failed");
       }
 
       setMessages((prev) => [...prev, { role: "assistant", content: data.answer }]);
-      setRemainingQuestions(data.remainingQuestions);
     } catch (err) {
       setMessages((prev) => [
         ...prev,
@@ -103,14 +90,6 @@ export default function AIChat({ symbol, commodityName, factors }: AIChatProps) 
 
   return (
     <div className="flex flex-col h-[500px]">
-      {/* Usage Indicator */}
-      <div className="mb-4 flex items-center justify-between text-sm">
-        <span className="text-base-content/60">Questions remaining today</span>
-        <span className={`font-medium ${remainingQuestions === 0 ? "text-error" : "text-success"}`}>
-          {remainingQuestions !== null ? remainingQuestions : "--"}
-        </span>
-      </div>
-
       {/* Messages */}
       <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
         {messages.length === 0 ? (
@@ -162,22 +141,22 @@ export default function AIChat({ symbol, commodityName, factors }: AIChatProps) 
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={remainingQuestions === 0 ? "Daily question limit reached" : "Type your question..."}
+          placeholder={limitReached ? "Daily question limit reached" : "Type your question..."}
           className="input input-bordered flex-1"
-          disabled={loading || remainingQuestions === 0}
+          disabled={loading || limitReached}
         />
         <button
           type="submit"
           className="btn btn-primary"
-          disabled={loading || !input.trim() || remainingQuestions === 0}
+          disabled={loading || !input.trim() || limitReached}
         >
           {loading ? <span className="loading loading-spinner loading-sm"></span> : "Send"}
         </button>
       </form>
 
-      {remainingQuestions === 0 && (
+      {limitReached && (
         <p className="text-xs text-error mt-2 text-center">
-          Daily free questions exhausted. <a href="/pricing" className="link">Upgrade to Premium</a> for more questions.
+          Daily free questions exhausted. <a href="/#pricing" className="link">Upgrade to Premium</a> for more questions.
         </p>
       )}
     </div>

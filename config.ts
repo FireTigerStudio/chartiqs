@@ -13,7 +13,7 @@ export const commodities = [
 // AI configuration
 export const aiConfig = {
   freeQuestionsPerDay: 3,
-  paidQuestionsPerDay: 20,
+  paidQuestionsPerDay: 50,
   cacheHours: 24,
 };
 
@@ -34,33 +34,27 @@ const config = {
     trialDays: 3,
     plans: [
       {
-        priceId:
-          process.env.NODE_ENV === "development"
-            ? "price_dev_monthly"
-            : process.env.STRIPE_PRICE_MONTHLY || "price_monthly",
+        priceId: process.env.STRIPE_PRICE_MONTHLY || "price_monthly",
         name: "Monthly",
-        description: "20 AI questions per day, all commodities",
+        description: "Unlimited AI questions, all commodities",
         price: 29,
         priceAnchor: 49,
         features: [
-          { name: "20 AI questions per day" },
+          { name: "Unlimited AI questions" },
           { name: "6 commodity analyses" },
           { name: "Real-time price charts" },
           { name: "Factor matrix visualization" },
         ],
       },
       {
-        priceId:
-          process.env.NODE_ENV === "development"
-            ? "price_dev_yearly"
-            : process.env.STRIPE_PRICE_YEARLY || "price_yearly",
+        priceId: process.env.STRIPE_PRICE_YEARLY || "price_yearly",
         isFeatured: true,
         name: "Yearly",
         description: "Save 14% — best value",
         price: 299,
         priceAnchor: 348,
         features: [
-          { name: "20 AI questions per day" },
+          { name: "Unlimited AI questions" },
           { name: "6 commodity analyses" },
           { name: "Real-time price charts" },
           { name: "Factor matrix visualization" },

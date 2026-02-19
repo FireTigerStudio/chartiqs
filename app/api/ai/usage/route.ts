@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/libs/supabase/server";
-import { aiConfig } from "@/config";
 
 export async function GET() {
   try {
@@ -20,7 +19,6 @@ export async function GET() {
       .single();
 
     const isPaid = profile?.has_access || false;
-    const dailyLimit = isPaid ? aiConfig.paidQuestionsPerDay : aiConfig.freeQuestionsPerDay;
 
     // Get today's usage
     const today = new Date().toISOString().split("T")[0];
@@ -32,12 +30,9 @@ export async function GET() {
       .single();
 
     const used = usage?.question_count || 0;
-    const remaining = Math.max(0, dailyLimit - used);
 
     return NextResponse.json({
       used,
-      remaining,
-      limit: dailyLimit,
       isPaid,
     });
   } catch (error) {
