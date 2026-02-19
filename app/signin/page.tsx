@@ -6,12 +6,14 @@ import { useState } from "react";
 import { createClient } from "@/libs/supabase/client";
 import toast from "react-hot-toast";
 import config from "@/config";
+import { useTranslation } from "@/libs/i18n";
 
 export default function Login() {
   const supabase = createClient();
   const [email, setEmail] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isDisabled, setIsDisabled] = useState<boolean>(false);
+  const { t } = useTranslation();
 
   const handleSignup = async (e: React.FormEvent) => {
     e?.preventDefault();
@@ -28,11 +30,11 @@ export default function Login() {
         },
       });
 
-      toast.success("Login link sent to your email!");
+      toast.success(t("signin.toastSent"));
       setIsDisabled(true);
     } catch (error) {
       console.log(error);
-      toast.error("Failed to send, please try again");
+      toast.error(t("signin.toastFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -58,7 +60,7 @@ export default function Login() {
         </Link>
       </div>
       <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-center mb-12">
-        Sign in to {config.appName}
+        {t("signin.title", { appName: config.appName })}
       </h1>
 
       <div className="space-y-8 max-w-xl mx-auto">
@@ -71,7 +73,7 @@ export default function Login() {
             type="email"
             value={email}
             autoComplete="email"
-            placeholder="Enter your email address"
+            placeholder={t("signin.emailPlaceholder")}
             className="input input-bordered w-full placeholder:opacity-60"
             onChange={(e) => setEmail(e.target.value)}
           />
@@ -84,13 +86,13 @@ export default function Login() {
             {isLoading && (
               <span className="loading loading-spinner loading-xs"></span>
             )}
-            Send Magic Link
+            {t("signin.sendMagicLink")}
           </button>
         </form>
 
         {isDisabled && (
           <p className="text-center text-sm text-base-content/60">
-            Login link sent! Please check your email (including spam folder).
+            {t("signin.linkSent")}
           </p>
         )}
       </div>

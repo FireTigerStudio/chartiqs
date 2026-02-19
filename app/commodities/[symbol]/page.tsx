@@ -27,6 +27,7 @@ export default async function CommodityDetailPage({ params }: Props) {
     <CommodityDetailClient
       symbol={instrument.symbol}
       name={instrument.name}
+      name_zh={instrument.name_zh}
       tv_symbol={instrument.tv_symbol}
       icon={instrument.icon}
     />
