@@ -9,6 +9,8 @@ import NextTopLoader from "nextjs-toploader";
 import { Toaster } from "react-hot-toast";
 import { Tooltip } from "react-tooltip";
 import config from "@/config";
+import apiClient from "@/libs/api";
+import { LanguageProvider } from "@/libs/i18n";
 
 // Crisp customer chat support:
 // This component is separated from ClientLayout because it needs to be wrapped with <SessionProvider> to use useSession() hook
@@ -61,6 +63,58 @@ const CrispChat = (): null => {
   return null;
 };
 
+// After login, if the user had clicked "Get Chartiqs" before being redirected to /signin,
+// this component picks up the pending checkout from localStorage and sends them straight to Stripe.
+const PendingCheckoutHandler = (): null => {
+  const supabase = createClient();
+
+  useEffect(() => {
+    const handlePendingCheckout = async () => {
+      const raw = localStorage.getItem("pendingCheckout");
+      if (!raw) return;
+
+      try {
+        const { priceId, mode, timestamp } = JSON.parse(raw);
+
+        // Expire after 30 minutes
+        if (Date.now() - timestamp > 30 * 60 * 1000) {
+          localStorage.removeItem("pendingCheckout");
+          return;
+        }
+
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // User is logged in and has a pending checkout — trigger it
+        localStorage.removeItem("pendingCheckout");
+
+        const { url }: { url: string } = await apiClient.post(
+          "/stripe/create-checkout",
+          {
+            priceId,
+            mode,
+            successUrl: window.location.origin + "/commodities",
+            cancelUrl: window.location.origin + "/#pricing",
+          }
+        );
+
+        if (url) {
+          window.location.href = url;
+        }
+      } catch (e) {
+        console.error("Failed to process pending checkout:", e);
+        localStorage.removeItem("pendingCheckout");
+      }
+    };
+
+    handlePendingCheckout();
+  }, [supabase]);
+
+  return null;
+};
+
 // All the client wrappers are here (they can't be in server components)
 // 1. NextTopLoader: Show a progress bar at the top when navigating between pages
 // 2. Toaster: Show Success/Error messages anywhere from the app with toast()
@@ -68,7 +122,7 @@ const CrispChat = (): null => {
 // 4. CrispChat: Set Crisp customer chat support (see above)
 const ClientLayout = ({ children }: { children: ReactNode }) => {
   return (
-    <>
+    <LanguageProvider>
       {/* Show a progress bar at the top when navigating between pages */}
       <NextTopLoader color={config.colors.main} showSpinner={false} />
 
@@ -90,7 +144,10 @@ const ClientLayout = ({ children }: { children: ReactNode }) => {
 
       {/* Set Crisp customer chat support */}
       <CrispChat />
-    </>
+
+      {/* Resume Stripe checkout after login redirect */}
+      <PendingCheckoutHandler />
+    </LanguageProvider>
   );
 };
 
