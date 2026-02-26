@@ -20,6 +20,7 @@ const ButtonCheckout = ({
   const { t } = useTranslation();
 
   const handlePayment = async () => {
+    if (isLoading) return;
     setIsLoading(true);
 
     try {
@@ -56,6 +57,7 @@ const ButtonCheckout = ({
   return (
     <button
       className="btn btn-primary btn-block group"
+      disabled={isLoading}
       onClick={() => handlePayment()}
     >
       {isLoading ? (

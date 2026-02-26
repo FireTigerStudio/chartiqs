@@ -268,7 +268,7 @@ describe("TC-13: Webhook Error Handling", () => {
     expect(data.error).toContain("Invalid signature");
   });
 
-  it("ISSUE: returns 200 even when DB write fails (Stripe won't retry)", async () => {
+  it("returns 500 when DB write fails so Stripe retries", async () => {
     mockState.updateError = new Error("Database write failed");
 
     const event = makeEvent("checkout.session.completed", {
@@ -278,14 +278,8 @@ describe("TC-13: Webhook Error Handling", () => {
 
     const res = await callWebhook(event);
 
-    // PROBLEM: Returns 200 even though DB failed -> Stripe won't retry
-    expect(res.status).toBe(200);
-
-    console.warn(
-      "WARNING [TC-13]: Webhook returns 200 even on DB failure. " +
-      "Stripe will NOT retry. User paid but may not get access. " +
-      "FIX: Return 500 on DB errors so Stripe retries."
-    );
+    // FIXED: Now returns 500 on DB failure so Stripe will retry
+    expect(res.status).toBe(500);
   });
 });
 

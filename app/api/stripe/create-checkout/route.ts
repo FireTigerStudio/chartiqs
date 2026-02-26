@@ -51,6 +51,14 @@ export async function POST(req: NextRequest) {
       .eq("id", user?.id)
       .single();
 
+    // Prevent duplicate purchases — already-paid users should manage via billing portal
+    if (data?.has_access) {
+      return NextResponse.json(
+        { error: "You already have an active subscription. Manage it from your account settings." },
+        { status: 400 }
+      );
+    }
+
     const stripeSessionURL = await createCheckout({
       priceId,
       mode,

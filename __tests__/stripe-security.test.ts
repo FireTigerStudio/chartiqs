@@ -54,7 +54,7 @@ describe("TC-05: Double-Click Prevention (Static Analysis)", () => {
     expect(source).toContain("setIsLoading(true)");
   });
 
-  it("GAP: ButtonCheckout does NOT have disabled={isLoading} on button", () => {
+  it("ButtonCheckout has disabled={isLoading} on button", () => {
     const source = readSource("components/ButtonCheckout.tsx");
 
     const hasDisabledProp =
@@ -72,11 +72,11 @@ describe("TC-05: Double-Click Prevention (Static Analysis)", () => {
       );
     }
 
-    // This is informational - we expect the gap exists
-    expect(hasDisabledProp).toBe(false);
+    // FIXED: button is now disabled during loading
+    expect(hasDisabledProp).toBe(true);
   });
 
-  it("GAP: handlePayment has no early return when isLoading is true", () => {
+  it("handlePayment has early return when isLoading is true", () => {
     const source = readSource("components/ButtonCheckout.tsx");
 
     // Check if there's a guard like: if (isLoading) return;
@@ -89,12 +89,13 @@ describe("TC-05: Double-Click Prevention (Static Analysis)", () => {
       );
     }
 
-    expect(hasGuard).toBe(false);
+    // FIXED: early return guard now exists
+    expect(hasGuard).toBe(true);
   });
 });
 
 describe("TC-06: Already-Paid User Detection (Static Analysis)", () => {
-  it("GAP: create-checkout does NOT check if user already has_access", () => {
+  it("create-checkout checks if user already has_access", () => {
     const source = readSource("app/api/stripe/create-checkout/route.ts");
 
     // Check if the route actively checks has_access before creating checkout
@@ -113,7 +114,8 @@ describe("TC-06: Already-Paid User Detection (Static Analysis)", () => {
       );
     }
 
-    expect(checksAccessInLogic).toBe(false);
+    // FIXED: create-checkout now checks has_access before creating session
+    expect(checksAccessInLogic).toBe(true);
   });
 
   it("GAP: ButtonCheckout does NOT check subscription status before showing", () => {
