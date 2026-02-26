@@ -31,6 +31,7 @@ export interface ConfigProps {
     onlyShowOnRoutes?: string[];
   };
   stripe: {
+    trialDays?: number;
     plans: {
       isFeatured?: boolean;
       priceId: string;

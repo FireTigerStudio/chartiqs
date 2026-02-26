@@ -1,5 +1,6 @@
 import { createCheckout } from "@/libs/stripe";
 import { createClient } from "@/libs/supabase/server";
+import config from "@/config";
 import { NextRequest, NextResponse } from "next/server";
 
 // This function is used to create a Stripe Checkout Session (one-time payment or subscription)
@@ -62,6 +63,8 @@ export async function POST(req: NextRequest) {
         // If the user has already purchased, it will automatically prefill it's credit card
         customerId: data?.customer_id,
       },
+      // 3-day free trial for subscriptions
+      trialDays: mode === "subscription" ? config.stripe.trialDays : undefined,
       // If you send coupons from the frontend, you can pass it here
       // couponId: body.couponId,
     });
