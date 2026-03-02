@@ -2,7 +2,8 @@
 
 import React from "react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/libs/supabase/client";
 import toast from "react-hot-toast";
 import config from "@/config";
@@ -10,10 +11,18 @@ import { useTranslation } from "@/libs/i18n";
 
 export default function Login() {
   const supabase = createClient();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isDisabled, setIsDisabled] = useState<boolean>(false);
   const { t } = useTranslation();
+
+  useEffect(() => {
+    const error = searchParams.get("error");
+    if (error) {
+      toast.error(error);
+    }
+  }, [searchParams]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e?.preventDefault();
@@ -23,12 +32,18 @@ export default function Login() {
     try {
       const redirectURL = window.location.origin + "/api/auth/callback";
 
-      await supabase.auth.signInWithOtp({
+      const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
           emailRedirectTo: redirectURL,
         },
       });
+
+      if (error) {
+        console.error("OTP error:", error.message);
+        toast.error(error.message);
+        return;
+      }
 
       toast.success(t("signin.toastSent"));
       setIsDisabled(true);

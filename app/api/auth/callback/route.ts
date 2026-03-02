@@ -9,9 +9,22 @@ export async function GET(req: NextRequest) {
   const requestUrl = new URL(req.url);
   const code = requestUrl.searchParams.get("code");
 
-  if (code) {
-    const supabase = await createClient();
-    await supabase.auth.exchangeCodeForSession(code);
+  try {
+    if (code) {
+      const supabase = await createClient();
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      if (error) {
+        console.error("Auth callback error:", error.message);
+        return NextResponse.redirect(
+          requestUrl.origin + "/signin?error=" + encodeURIComponent(error.message)
+        );
+      }
+    }
+  } catch (e) {
+    console.error("Auth callback exception:", e);
+    return NextResponse.redirect(
+      requestUrl.origin + "/signin?error=" + encodeURIComponent("Authentication failed")
+    );
   }
 
   // URL to redirect to after sign in process completes
