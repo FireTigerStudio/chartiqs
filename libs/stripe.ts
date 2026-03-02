@@ -1,5 +1,12 @@
 import Stripe from "stripe";
 
+// Cloudflare Workers doesn't support Node.js HTTP — use fetch-based client
+const stripeConfig: Stripe.StripeConfig = {
+  apiVersion: "2023-08-16",
+  typescript: true,
+  httpClient: Stripe.createFetchHttpClient(),
+};
+
 interface CreateCheckoutParams {
   priceId: string;
   mode: "payment" | "subscription";
@@ -31,10 +38,7 @@ export const createCheckout = async ({
   trialDays,
 }: CreateCheckoutParams): Promise<string> => {
   try {
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2023-08-16", // TODO: update this when Stripe updates their API
-      typescript: true,
-    });
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, stripeConfig);
 
     const extraParams: {
       customer?: string;
@@ -97,10 +101,7 @@ export const createCustomerPortal = async ({
   customerId,
   returnUrl,
 }: CreateCustomerPortalParams): Promise<string> => {
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: "2023-08-16", // TODO: update this when Stripe updates their API
-    typescript: true,
-  });
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, stripeConfig);
 
   const portalSession = await stripe.billingPortal.sessions.create({
     customer: customerId,
@@ -113,10 +114,7 @@ export const createCustomerPortal = async ({
 // This is used to get the uesr checkout session and populate the data so we get the planId the user subscribed to
 export const findCheckoutSession = async (sessionId: string) => {
   try {
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2023-08-16", // TODO: update this when Stripe updates their API
-      typescript: true,
-    });
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, stripeConfig);
 
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
       expand: ["line_items"],
