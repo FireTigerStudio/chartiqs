@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import toast from "react-hot-toast";
 import apiClient from "@/libs/api";
 import config from "@/config";
 import { useTranslation } from "@/libs/i18n";
@@ -45,7 +46,7 @@ const ButtonCheckout = ({
       if (url) {
         window.location.href = url;
       } else {
-        console.error("No checkout URL returned");
+        toast.error("Unable to start checkout. Please try again.");
       }
     } catch (e) {
       console.error(e);

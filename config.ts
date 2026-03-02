@@ -34,7 +34,7 @@ const config = {
     trialDays: 3,
     plans: [
       {
-        priceId: process.env.STRIPE_PRICE_MONTHLY || "price_monthly",
+        priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY || "price_monthly",
         name: "Monthly",
         description: "Unlimited AI questions, all commodities",
         price: 29,
@@ -47,7 +47,7 @@ const config = {
         ],
       },
       {
-        priceId: process.env.STRIPE_PRICE_YEARLY || "price_yearly",
+        priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_YEARLY || "price_yearly",
         isFeatured: true,
         name: "Yearly",
         description: "Save 14% — best value",
