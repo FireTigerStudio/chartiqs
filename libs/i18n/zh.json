@@ -122,5 +122,15 @@
   "common.loading": "加载中...",
   "common.error": "发生了错误",
   "lang.en": "EN",
-  "lang.zh": "中文"
+  "lang.zh": "中文",
+  "watchlist.myWatchlist": "我的关注列表",
+  "watchlist.add": "添加",
+  "watchlist.remove": "移除",
+  "watchlist.addTitle": "添加商品",
+  "watchlist.searchPlaceholder": "搜索商品...",
+  "watchlist.noResults": "未找到商品",
+  "watchlist.close": "关闭",
+  "watchlist.emptyHint": "添加商品到关注列表以在此追踪",
+  "watchlist.addError": "添加失败",
+  "watchlist.removeError": "移除失败"
 }

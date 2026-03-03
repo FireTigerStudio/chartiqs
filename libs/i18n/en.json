@@ -122,5 +122,15 @@
   "common.loading": "Loading...",
   "common.error": "An error occurred",
   "lang.en": "EN",
-  "lang.zh": "中文"
+  "lang.zh": "中文",
+  "watchlist.myWatchlist": "My Watchlist",
+  "watchlist.add": "Add",
+  "watchlist.remove": "Remove",
+  "watchlist.addTitle": "Add Instrument",
+  "watchlist.searchPlaceholder": "Search instruments...",
+  "watchlist.noResults": "No instruments found",
+  "watchlist.close": "Close",
+  "watchlist.emptyHint": "Add instruments to your watchlist to track them here",
+  "watchlist.addError": "Failed to add instrument",
+  "watchlist.removeError": "Failed to remove instrument"
 }
