@@ -50,6 +50,8 @@ const ButtonCheckout = ({
       }
     } catch (e) {
       console.error(e);
+      toast.error(e?.message || "Payment failed. Please try again.");
+      localStorage.removeItem("pendingCheckout");
     }
 
     setIsLoading(false);
