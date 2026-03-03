@@ -27,6 +27,14 @@ const Header = () => {
       href: "/commodities",
       label: t("nav.commodities"),
     },
+    ...(user
+      ? [
+          {
+            href: "/dashboard",
+            label: t("nav.dashboard"),
+          },
+        ]
+      : []),
     {
       href: "/#pricing",
       label: t("nav.pricing"),
