@@ -1,17 +1,55 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import ButtonAccount from "@/components/ButtonAccount";
+import AddInstrumentModal from "@/components/AddInstrumentModal";
 import { useTranslation } from "@/libs/i18n";
+import apiClient from "@/libs/api";
 import type { Instrument } from "@/libs/instruments";
 
 interface Props {
   instruments: Instrument[];
   isPaid: boolean;
+  initialWatchlist: string[];
 }
 
-export default function DashboardClient({ instruments, isPaid }: Props) {
+export default function DashboardClient({ instruments, isPaid, initialWatchlist }: Props) {
   const { t, lang } = useTranslation();
+  const [watchlist, setWatchlist] = useState<string[]>(initialWatchlist);
+  const [showModal, setShowModal] = useState(false);
+
+  const watchedInstruments = watchlist.length > 0
+    ? watchlist.map((s) => instruments.find((i) => i.symbol === s)).filter(Boolean) as Instrument[]
+    : [];
+
+  const hasWatchlist = watchedInstruments.length > 0;
+
+  const handleAdd = async (symbol: string) => {
+    // Optimistic update
+    setWatchlist((prev) => [...prev, symbol]);
+    setShowModal(false);
+    try {
+      await apiClient.post("/watchlist", { symbol });
+    } catch {
+      // Revert on failure
+      setWatchlist((prev) => prev.filter((s) => s !== symbol));
+      toast.error(t("watchlist.addError"));
+    }
+  };
+
+  const handleRemove = async (symbol: string) => {
+    // Optimistic update
+    setWatchlist((prev) => prev.filter((s) => s !== symbol));
+    try {
+      await apiClient.delete("/watchlist", { data: { symbol } });
+    } catch {
+      // Revert on failure
+      setWatchlist((prev) => [...prev, symbol]);
+      toast.error(t("watchlist.removeError"));
+    }
+  };
 
   return (
     <main className="min-h-screen bg-base-100">
@@ -49,26 +87,68 @@ export default function DashboardClient({ instruments, isPaid }: Props) {
           </div>
         </div>
 
-        {/* Quick Access */}
+        {/* Watchlist / Instruments */}
         <div>
-          <h2 className="text-xl font-semibold mb-4">{t("dashboard.analyzeCommodity")}</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {instruments.map((instrument) => {
-              const displayName = lang === "zh" && instrument.name_zh ? instrument.name_zh : instrument.name;
-              return (
-                <Link
-                  key={instrument.symbol}
-                  href={`/commodities/${instrument.symbol}`}
-                  className="card bg-base-200 hover:bg-base-300 transition-colors"
-                >
-                  <div className="card-body items-center text-center p-4">
-                    <span className="text-3xl">{instrument.icon}</span>
-                    <span className="text-sm font-medium">{displayName}</span>
-                  </div>
-                </Link>
-              );
-            })}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">
+              {hasWatchlist ? t("watchlist.myWatchlist") : t("dashboard.analyzeCommodity")}
+            </h2>
+            {hasWatchlist && (
+              <button className="btn btn-primary btn-sm" onClick={() => setShowModal(true)}>
+                + {t("watchlist.add")}
+              </button>
+            )}
           </div>
+
+          {hasWatchlist ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {watchedInstruments.map((instrument) => {
+                const displayName = lang === "zh" && instrument.name_zh ? instrument.name_zh : instrument.name;
+                return (
+                  <div key={instrument.symbol} className="relative group">
+                    <Link
+                      href={`/commodities/${instrument.symbol}`}
+                      className="card bg-base-200 hover:bg-base-300 transition-colors"
+                    >
+                      <div className="card-body items-center text-center p-4">
+                        <span className="text-3xl">{instrument.icon}</span>
+                        <span className="text-sm font-medium">{displayName}</span>
+                      </div>
+                    </Link>
+                    <button
+                      className="absolute -top-2 -right-2 btn btn-circle btn-xs btn-error opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => handleRemove(instrument.symbol)}
+                      title={t("watchlist.remove")}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <>
+              <p className="text-base-content/60 mb-4">{t("watchlist.emptyHint")}</p>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {instruments.map((instrument) => {
+                  const displayName = lang === "zh" && instrument.name_zh ? instrument.name_zh : instrument.name;
+                  return (
+                    <button
+                      key={instrument.symbol}
+                      className="card bg-base-200 hover:bg-base-300 transition-colors cursor-pointer"
+                      onClick={() => handleAdd(instrument.symbol)}
+                    >
+                      <div className="card-body items-center text-center p-4">
+                        <span className="text-3xl">{instrument.icon}</span>
+                        <span className="text-sm font-medium">{displayName}</span>
+                        <span className="text-xs text-primary">+ {t("watchlist.add")}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Info */}
@@ -81,6 +161,16 @@ export default function DashboardClient({ instruments, isPaid }: Props) {
           </ol>
         </div>
       </div>
+
+      {/* Add Instrument Modal */}
+      {showModal && (
+        <AddInstrumentModal
+          instruments={instruments}
+          watchlist={watchlist}
+          onAdd={handleAdd}
+          onClose={() => setShowModal(false)}
+        />
+      )}
     </main>
   );
 }

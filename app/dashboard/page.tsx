@@ -20,5 +20,20 @@ export default async function Dashboard() {
 
   const isPaid = profile?.has_access || false;
 
-  return <DashboardClient instruments={instruments} isPaid={isPaid} />;
+  // Fetch user's watchlist
+  const { data: watchlistRows } = await supabase
+    .from("user_watchlist")
+    .select("symbol")
+    .eq("user_id", user!.id)
+    .order("added_at", { ascending: true });
+
+  const watchlist = (watchlistRows || []).map((r: { symbol: string }) => r.symbol);
+
+  return (
+    <DashboardClient
+      instruments={instruments}
+      isPaid={isPaid}
+      initialWatchlist={watchlist}
+    />
+  );
 }
