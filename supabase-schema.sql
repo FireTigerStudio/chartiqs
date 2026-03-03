@@ -159,3 +159,28 @@ BEGIN
   DELETE FROM analysis_cache WHERE expires_at < NOW();
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 11. User watchlist (personal instrument tracking)
+CREATE TABLE IF NOT EXISTS user_watchlist (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  symbol TEXT NOT NULL REFERENCES instruments(symbol) ON DELETE CASCADE,
+  added_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, symbol)
+);
+
+CREATE INDEX IF NOT EXISTS idx_watchlist_user ON user_watchlist(user_id);
+
+ALTER TABLE user_watchlist ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can read own watchlist" ON user_watchlist;
+CREATE POLICY "Users can read own watchlist" ON user_watchlist
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own watchlist" ON user_watchlist;
+CREATE POLICY "Users can insert own watchlist" ON user_watchlist
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete own watchlist" ON user_watchlist;
+CREATE POLICY "Users can delete own watchlist" ON user_watchlist
+  FOR DELETE USING (auth.uid() = user_id);
