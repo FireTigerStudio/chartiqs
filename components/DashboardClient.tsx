@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import ButtonAccount from "@/components/ButtonAccount";
 import AddInstrumentModal from "@/components/AddInstrumentModal";
 import { useTranslation } from "@/libs/i18n";
 import apiClient from "@/libs/api";
@@ -57,7 +56,6 @@ export default function DashboardClient({ instruments, isPaid, initialWatchlist 
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">{t("dashboard.title")}</h1>
-          <ButtonAccount />
         </div>
 
         {/* Stats */}

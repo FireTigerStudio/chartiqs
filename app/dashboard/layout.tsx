@@ -1,6 +1,7 @@
-import { ReactNode } from "react";
+import { ReactNode, Suspense } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/libs/supabase/server";
+import Header from "@/components/Header";
 import config from "@/config";
 
 // This is a server-side component to ensure the user is logged in.
@@ -23,5 +24,12 @@ export default async function LayoutPrivate({
     redirect(config.auth.loginUrl);
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <Suspense>
+        <Header />
+      </Suspense>
+      {children}
+    </>
+  );
 }
