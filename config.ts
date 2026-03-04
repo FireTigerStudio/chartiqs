@@ -30,8 +30,7 @@ const config = {
     onlyShowOnRoutes: ["/"],
   },
   stripe: {
-    // 3-day free trial
-    trialDays: 3,
+    trialDays: 0,
     plans: [
       {
         priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY || "price_monthly",
