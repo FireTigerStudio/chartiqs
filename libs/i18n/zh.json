@@ -74,6 +74,7 @@
   "pricing.bestValue": "最超值",
   "pricing.currency": "美元",
   "pricing.trial": "随时取消",
+  "pricing.taxNote": "价格不含税",
   "pricing.getApp": "获取 {appName}",
   "pricing.plan.monthly": "月度订阅",
   "pricing.plan.yearly": "年度订阅",

@@ -104,6 +104,10 @@ const Pricing = () => {
             </div>
           ))}
         </div>
+
+        <p className="text-center text-xs text-base-content/50 mt-8">
+          {t("pricing.taxNote")}
+        </p>
       </div>
     </section>
   );

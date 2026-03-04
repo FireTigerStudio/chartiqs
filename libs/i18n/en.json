@@ -74,6 +74,7 @@
   "pricing.bestValue": "BEST VALUE",
   "pricing.currency": "USD",
   "pricing.trial": "Cancel anytime",
+  "pricing.taxNote": "Prices exclude applicable taxes",
   "pricing.getApp": "Get {appName}",
   "pricing.plan.monthly": "Monthly",
   "pricing.plan.yearly": "Yearly",
