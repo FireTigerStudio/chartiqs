@@ -1,4 +1,3 @@
-import configFile from "@/config";
 import { findCheckoutSession } from "@/libs/stripe";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { headers } from "next/headers";
@@ -54,13 +53,22 @@ export async function POST(req: NextRequest) {
         const customerId = session?.customer;
         const priceId = session?.line_items?.data[0]?.price.id;
         const userId = stripeObject.client_reference_id;
-        const plan = configFile.stripe.plans.find((p) => p.priceId === priceId);
+
+        console.log("checkout.session.completed:", {
+          customerId,
+          priceId,
+          userId,
+          customerEmail: stripeObject.customer_details?.email,
+        });
+
+        if (!customerId || !priceId) {
+          console.error("Missing customerId or priceId from checkout session");
+          break;
+        }
 
         const customer = (await stripe.customers.retrieve(
           customerId as string
         )) as Stripe.Customer;
-
-        if (!plan) break;
 
         let user;
         if (!userId) {
@@ -91,7 +99,9 @@ export async function POST(req: NextRequest) {
           user = profile;
         }
 
-        await supabase
+        console.log("Updating profile for user:", user?.id, user?.email);
+
+        const { error: updateError } = await supabase
           .from("profiles")
           .update({
             customer_id: customerId,
@@ -99,6 +109,12 @@ export async function POST(req: NextRequest) {
             has_access: true,
           })
           .eq("id", user?.id);
+
+        if (updateError) {
+          console.error("Profile update failed:", updateError);
+        } else {
+          console.log("Profile updated successfully for user:", user?.id);
+        }
 
         // Extra: send email with user link, product page, etc...
         // try {
@@ -153,6 +169,12 @@ export async function POST(req: NextRequest) {
           .select("*")
           .eq("customer_id", customerId)
           .single();
+
+        // On first payment, checkout.session.completed may not have set customer_id yet
+        if (!profile) {
+          console.log("invoice.paid: no profile found for customer_id:", customerId);
+          break;
+        }
 
         // Make sure the invoice is for the same plan (priceId) the user subscribed to
         if (profile.price_id !== priceId) break;
