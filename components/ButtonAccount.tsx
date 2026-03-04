@@ -43,7 +43,7 @@ const ButtonAccount = () => {
 	}, [supabase]);
 
 	const handleSignOut = async () => {
-		await supabase.auth.signOut();
+		await supabase.auth.signOut({ scope: "global" });
 		window.location.href = "/";
 	};
 

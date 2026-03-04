@@ -12,6 +12,8 @@ export async function GET(req: NextRequest) {
   try {
     if (code) {
       const supabase = await createClient();
+      // Clear any existing session before exchanging the new code
+      await supabase.auth.signOut({ scope: "local" });
       const { error } = await supabase.auth.exchangeCodeForSession(code);
       if (error) {
         console.error("Auth callback error:", error.message);

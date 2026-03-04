@@ -13,6 +13,11 @@ export async function GET(request: NextRequest) {
   if (token_hash && type) {
     const supabase = await createClient();
 
+    // Sign out any existing session before verifying the new OTP.
+    // This prevents stale session cookies from a previous user
+    // interfering with the new sign-in.
+    await supabase.auth.signOut({ scope: "local" });
+
     const { error } = await supabase.auth.verifyOtp({
       type,
       token_hash,
