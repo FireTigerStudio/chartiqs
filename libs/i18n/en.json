@@ -103,6 +103,8 @@
   "signin.emailPlaceholder": "Enter your email address",
   "signin.sendMagicLink": "Send Magic Link",
   "signin.linkSent": "Login link sent! Please check your email...",
+  "signin.resend": "Resend Magic Link",
+  "signin.resendIn": "Resend in {seconds}s",
   "signin.toastSent": "Login link sent to your email!",
   "signin.toastFailed": "Failed to send, please try again",
   "disclaimer.title": "Disclaimer",

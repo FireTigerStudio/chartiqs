@@ -2,19 +2,23 @@
 
 import React from "react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/libs/supabase/client";
 import toast from "react-hot-toast";
 import config from "@/config";
 import { useTranslation } from "@/libs/i18n";
 
+const RESEND_COOLDOWN = 60; // seconds
+
 export default function Login() {
   const supabase = createClient();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isDisabled, setIsDisabled] = useState<boolean>(false);
+  const [isSent, setIsSent] = useState<boolean>(false);
+  const [cooldown, setCooldown] = useState<number>(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -24,7 +28,27 @@ export default function Login() {
     }
   }, [searchParams]);
 
-  const handleSignup = async (e: React.FormEvent) => {
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
+
+  const startCooldown = () => {
+    setCooldown(RESEND_COOLDOWN);
+    timerRef.current = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current!);
+          timerRef.current = null;
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const handleSignup = async (e?: React.FormEvent) => {
     e?.preventDefault();
 
     setIsLoading(true);
@@ -46,7 +70,8 @@ export default function Login() {
       }
 
       toast.success(t("signin.toastSent"));
-      setIsDisabled(true);
+      setIsSent(true);
+      startCooldown();
     } catch (error) {
       console.log(error);
       toast.error(t("signin.toastFailed"));
@@ -93,19 +118,36 @@ export default function Login() {
             onChange={(e) => setEmail(e.target.value)}
           />
 
-          <button
-            className="btn btn-primary btn-block"
-            disabled={isLoading || isDisabled}
-            type="submit"
-          >
-            {isLoading && (
-              <span className="loading loading-spinner loading-xs"></span>
-            )}
-            {t("signin.sendMagicLink")}
-          </button>
+          {!isSent ? (
+            <button
+              className="btn btn-primary btn-block"
+              disabled={isLoading}
+              type="submit"
+            >
+              {isLoading && (
+                <span className="loading loading-spinner loading-xs"></span>
+              )}
+              {t("signin.sendMagicLink")}
+            </button>
+          ) : (
+            <>
+              <button
+                className="btn btn-primary btn-block"
+                disabled={isLoading || cooldown > 0}
+                type="submit"
+              >
+                {isLoading && (
+                  <span className="loading loading-spinner loading-xs"></span>
+                )}
+                {cooldown > 0
+                  ? t("signin.resendIn", { seconds: String(cooldown) })
+                  : t("signin.resend")}
+              </button>
+            </>
+          )}
         </form>
 
-        {isDisabled && (
+        {isSent && (
           <p className="text-center text-sm text-base-content/60">
             {t("signin.linkSent")}
           </p>

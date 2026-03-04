@@ -103,6 +103,8 @@
   "signin.emailPlaceholder": "请输入邮箱地址",
   "signin.sendMagicLink": "发送登录链接",
   "signin.linkSent": "登录链接已发送！请查看邮箱...",
+  "signin.resend": "重新发送登录链接",
+  "signin.resendIn": "{seconds}秒后可重新发送",
   "signin.toastSent": "登录链接已发送到您的邮箱！",
   "signin.toastFailed": "发送失败，请重试",
   "disclaimer.title": "免责声明",
