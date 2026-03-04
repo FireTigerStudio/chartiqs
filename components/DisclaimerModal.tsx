@@ -56,7 +56,6 @@ const DisclaimerModal = () => {
 
   const handleConfirm = async () => {
     if (!isChecked) {
-      toast.error("Please check the confirmation box first");
       return;
     }
 
@@ -140,66 +139,26 @@ const DisclaimerModal = () => {
                 </Dialog.Title>
 
                 <div className="space-y-4 mb-6 text-base-content/80 max-h-[60vh] overflow-y-auto">
-                  <div className="bg-base-200 p-4 rounded-lg">
-                    <h4 className="font-semibold mb-2 text-base-content">
-                      1. Educational Purpose
-                    </h4>
-                    <p className="text-sm">
-                      This platform (Chartiqs) provides educational analysis of commodity market factors only, designed to help users understand various factors affecting commodity prices. All content is for learning purposes only.
-                    </p>
-                  </div>
-
-                  <div className="bg-base-200 p-4 rounded-lg">
-                    <h4 className="font-semibold mb-2 text-base-content">
-                      2. Not Investment Advice
-                    </h4>
-                    <p className="text-sm">
-                      All analysis, data, charts, and AI-generated content provided on this platform <strong className="text-error">do not constitute any investment advice</strong>, trading strategies, or buy/sell recommendations. Users should not rely solely on platform content for investment decisions.
-                    </p>
-                  </div>
-
-                  <div className="bg-base-200 p-4 rounded-lg">
-                    <h4 className="font-semibold mb-2 text-base-content">
-                      3. High Risk Warning
-                    </h4>
-                    <p className="text-sm">
-                      Commodities and futures trading involve <strong className="text-error">extremely high market risk</strong>, with significant price volatility that may result in total loss of principal. Such investments are not suitable for all investors. Please fully assess your risk tolerance.
-                    </p>
-                  </div>
-
-                  <div className="bg-base-200 p-4 rounded-lg">
-                    <h4 className="font-semibold mb-2 text-base-content">
-                      4. AI Analysis Limitations
-                    </h4>
-                    <p className="text-sm">
-                      This platform uses AI technology to generate market analysis. While we strive for accuracy, AI models may contain comprehension bias, data lag, or analytical errors. AI-generated content should not be considered professional financial advice.
-                    </p>
-                  </div>
-
-                  <div className="bg-base-200 p-4 rounded-lg">
-                    <h4 className="font-semibold mb-2 text-base-content">
-                      5. Data Accuracy
-                    </h4>
-                    <p className="text-sm">
-                      While we strive to ensure data accuracy and timeliness, we cannot guarantee all information is completely accurate, complete, or current. Market data comes from third parties and may be delayed or contain errors.
-                    </p>
-                  </div>
-
-                  <div className="bg-base-200 p-4 rounded-lg">
-                    <h4 className="font-semibold mb-2 text-base-content">
-                      6. Limitation of Liability
-                    </h4>
-                    <p className="text-sm">
-                      The platform operators assume no responsibility for any profits or losses resulting from investment decisions made by users based on platform content. Please make investment decisions under professional guidance.
-                    </p>
-                  </div>
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={i} className="bg-base-200 p-4 rounded-lg">
+                      <h4 className="font-semibold mb-2 text-base-content">
+                        {t(`disclaimerModal.section${i}.title`)}
+                      </h4>
+                      <p
+                        className="text-sm [&_strong]:text-error"
+                        dangerouslySetInnerHTML={{
+                          __html: t(`disclaimerModal.section${i}.text`),
+                        }}
+                      />
+                    </div>
+                  ))}
 
                   <div className="bg-error/10 border border-error/30 p-4 rounded-lg">
                     <p className="text-sm font-semibold text-center text-error">
                       {t("disclaimerModal.riskWarning")}
                     </p>
                     <p className="text-xs text-center mt-2 text-base-content/60">
-                      Please ensure you fully understand the associated risks and consult professionals before making any investment decisions
+                      {t("disclaimerModal.riskWarningDetail")}
                     </p>
                   </div>
                 </div>
@@ -228,7 +187,7 @@ const DisclaimerModal = () => {
                     {isConfirming ? (
                       <>
                         <span className="loading loading-spinner loading-sm"></span>
-                        Confirming...
+                        {t("disclaimerModal.confirming")}
                       </>
                     ) : (
                       t("disclaimerModal.confirm")

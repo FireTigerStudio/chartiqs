@@ -43,10 +43,10 @@ const Pricing = () => {
               <div className="relative flex flex-col h-full gap-5 lg:gap-8 z-10 bg-base-100 p-8 rounded-lg">
                 <div className="flex justify-between items-center gap-4">
                   <div>
-                    <p className="text-lg lg:text-xl font-bold">{plan.name}</p>
+                    <p className="text-lg lg:text-xl font-bold">{t(`pricing.plan.${plan.name.toLowerCase()}`)}</p>
                     {plan.description && (
                       <p className="text-base-content/80 mt-2">
-                        {plan.description}
+                        {t(`pricing.plan.${plan.name.toLowerCase()}.desc`)}
                       </p>
                     )}
                   </div>
