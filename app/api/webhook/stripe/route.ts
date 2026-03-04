@@ -31,14 +31,6 @@ export async function POST(req: NextRequest) {
   );
 
   // verify Stripe event is legit
-  console.log("Webhook received:", {
-    hasSignature: !!signature,
-    signaturePrefix: signature?.substring(0, 20),
-    hasSecret: !!webhookSecret,
-    secretPrefix: webhookSecret?.substring(0, 10),
-    bodyLength: body.length,
-  });
-
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err) {
