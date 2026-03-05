@@ -133,9 +133,26 @@ export async function POST(req: NextRequest) {
       }
 
       case "customer.subscription.updated": {
-        // The customer might have changed the plan (higher or lower plan, cancel soon etc...)
-        // You don't need to do anything here, because Stripe will let us know when the subscription is canceled for good (at the end of the billing cycle) in the "customer.subscription.deleted" event
-        // You can update the user data to show a "Cancel soon" badge for instance
+        // Handles: plan change, reactivation ("do not cancel"), cancellation reversal
+        const updatedSub: Stripe.Subscription = event.data
+          .object as Stripe.Subscription;
+        const updatedCustomerId = updatedSub.customer as string;
+        const updatedStatus = updatedSub.status;
+
+        console.log("customer.subscription.updated:", {
+          customerId: updatedCustomerId,
+          status: updatedStatus,
+          cancelAtPeriodEnd: updatedSub.cancel_at_period_end,
+        });
+
+        // If subscription is active (including reactivated), restore access
+        if (updatedStatus === "active" && !updatedSub.cancel_at_period_end) {
+          const updatedPriceId = updatedSub.items.data[0]?.price.id;
+          await supabase
+            .from("profiles")
+            .update({ has_access: true, price_id: updatedPriceId })
+            .eq("customer_id", updatedCustomerId);
+        }
         break;
       }
 
