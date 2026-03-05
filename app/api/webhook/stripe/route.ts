@@ -142,16 +142,41 @@ export async function POST(req: NextRequest) {
       case "customer.subscription.deleted": {
         // The customer subscription stopped
         // ❌ Revoke access to the product
-        const stripeObject: Stripe.Subscription = event.data
+        const deletedSub: Stripe.Subscription = event.data
           .object as Stripe.Subscription;
-        const subscription = await stripe.subscriptions.retrieve(
-          stripeObject.id
-        );
+        const deletedCustomerId = deletedSub.customer as string;
 
-        await supabase
+        console.log("customer.subscription.deleted:", { customerId: deletedCustomerId });
+
+        const { error: deleteError } = await supabase
           .from("profiles")
-          .update({ has_access: false })
-          .eq("customer_id", subscription.customer);
+          .update({ has_access: false, price_id: null })
+          .eq("customer_id", deletedCustomerId);
+
+        if (deleteError) {
+          console.error("Failed to revoke access on subscription deleted:", deleteError);
+        }
+        break;
+      }
+
+      case "charge.refunded": {
+        // A charge was refunded — revoke access
+        const refundedCharge: Stripe.Charge = event.data
+          .object as Stripe.Charge;
+        const refundedCustomerId = refundedCharge.customer as string;
+
+        console.log("charge.refunded:", { customerId: refundedCustomerId });
+
+        if (refundedCustomerId) {
+          const { error: refundError } = await supabase
+            .from("profiles")
+            .update({ has_access: false, price_id: null })
+            .eq("customer_id", refundedCustomerId);
+
+          if (refundError) {
+            console.error("Failed to revoke access on refund:", refundError);
+          }
+        }
         break;
       }
 
@@ -176,13 +201,10 @@ export async function POST(req: NextRequest) {
           break;
         }
 
-        // Make sure the invoice is for the same plan (priceId) the user subscribed to
-        if (profile.price_id !== priceId) break;
-
-        // Grant the profile access to your product. It's a boolean in the database, but could be a number of credits, etc...
+        // Grant access and update the price_id (handles plan switches too)
         await supabase
           .from("profiles")
-          .update({ has_access: true })
+          .update({ has_access: true, price_id: priceId })
           .eq("customer_id", customerId);
 
         break;
