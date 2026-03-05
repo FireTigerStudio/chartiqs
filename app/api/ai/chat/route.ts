@@ -152,8 +152,12 @@ Tone: Professional but friendly, like a teacher educating a student`;
     });
 
     if (!response.ok) {
-      console.error("Gemini API error:", await response.text());
-      return NextResponse.json({ error: "AI service temporarily unavailable" }, { status: 503 });
+      const errorText = await response.text();
+      console.error("Gemini API error:", response.status, errorText);
+      return NextResponse.json(
+        { error: "AI service temporarily unavailable", detail: `Gemini ${response.status}: ${errorText.slice(0, 200)}` },
+        { status: 503 }
+      );
     }
 
     const result = await response.json();
