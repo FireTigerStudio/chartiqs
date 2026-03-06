@@ -152,11 +152,20 @@ INSERT INTO instruments (symbol, name, name_zh, category, tv_symbol, icon, sort_
   ('SOYBEAN',     'Soybean',        '大豆',    'commodity', 'CMCMARKETS:SOYBEAN1!',   '🫘', 6)
 ON CONFLICT (symbol) DO NOTHING;
 
--- 10. Cleanup expired cache function (optional, for scheduled jobs)
+-- 10. Cleanup expired cache + stale usage data
 CREATE OR REPLACE FUNCTION cleanup_expired_cache()
 RETURNS void AS $$
+DECLARE
+  cache_deleted INT;
+  usage_deleted INT;
 BEGIN
   DELETE FROM analysis_cache WHERE expires_at < NOW();
+  GET DIAGNOSTICS cache_deleted = ROW_COUNT;
+
+  DELETE FROM ai_usage WHERE date < (CURRENT_DATE - INTERVAL '90 days');
+  GET DIAGNOSTICS usage_deleted = ROW_COUNT;
+
+  RAISE LOG 'cleanup_expired_cache: deleted % cache rows, % usage rows', cache_deleted, usage_deleted;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
