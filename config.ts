@@ -13,7 +13,7 @@ export const commodities = [
 // AI configuration
 export const aiConfig = {
   freeQuestionsPerDay: 3,
-  paidQuestionsPerDay: 50,
+  paidQuestionsPerDay: 200,
   cacheHours: 24,
 };
 

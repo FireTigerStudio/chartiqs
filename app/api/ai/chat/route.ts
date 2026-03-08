@@ -144,7 +144,7 @@ Requirements:
    - End with a brief takeaway if appropriate
 3. You may reference the currently displayed factors
 4. Do not give buy/sell recommendations
-5. Keep answer within 250 words
+5. Keep answer within 400 words
 6. If the question involves specific investment advice, politely decline and guide the user to ask other questions
 7. ${languageInstruction}
 
@@ -157,7 +157,7 @@ Tone: Professional but friendly, like a teacher educating a student`;
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
           temperature: 0.7,
-          maxOutputTokens: 512,
+          maxOutputTokens: 1024,
         },
       }),
     });
