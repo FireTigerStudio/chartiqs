@@ -36,6 +36,7 @@ export default function CommodityDetailClient({ symbol, name, name_zh, tv_symbol
   const [analysis, setAnalysis] = useState<AnalysisData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const displayName = lang === "zh" && name_zh ? name_zh : name;
 
@@ -64,6 +65,18 @@ export default function CommodityDetailClient({ symbol, name, name_zh, tv_symbol
   useEffect(() => {
     fetchAnalysis();
   }, [fetchAnalysis]);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch("/api/ai/usage");
+        setIsLoggedIn(res.ok);
+      } catch {
+        setIsLoggedIn(false);
+      }
+    };
+    checkAuth();
+  }, []);
 
   return (
     <main className="min-h-screen bg-base-100">
@@ -143,6 +156,7 @@ export default function CommodityDetailClient({ symbol, name, name_zh, tv_symbol
                   symbol={symbol}
                   commodityName={displayName}
                   factors={analysis?.factors || []}
+                  isLoggedIn={isLoggedIn}
                 />
               </div>
             </section>

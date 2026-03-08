@@ -114,6 +114,12 @@ export async function POST(request: Request) {
       // Cache hit — still count as a question
       await updateUsage(serviceSupabase, user.id, today);
 
+      // Save to chat history
+      await serviceSupabase.from("chat_messages").insert([
+        { user_id: user.id, symbol, role: "user", content: question },
+        { user_id: user.id, symbol, role: "assistant", content: cached.analysis_data.answer },
+      ]);
+
       return NextResponse.json({
         answer: cached.analysis_data.answer,
         fromCache: true,
@@ -183,6 +189,12 @@ Tone: Professional but friendly, like a teacher educating a student`;
 
     // Update usage count
     await updateUsage(serviceSupabase, user.id, today);
+
+    // Save to chat history
+    await serviceSupabase.from("chat_messages").insert([
+      { user_id: user.id, symbol, role: "user", content: question },
+      { user_id: user.id, symbol, role: "assistant", content: answer },
+    ]);
 
     return NextResponse.json({
       answer,
