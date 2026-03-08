@@ -44,6 +44,7 @@ export default function AIChat({ symbol, commodityName, factors, isLoggedIn }: A
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [limitReached, setLimitReached] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -53,6 +54,32 @@ export default function AIChat({ symbol, commodityName, factors, isLoggedIn }: A
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setHistoryLoaded(true);
+      return;
+    }
+    const loadHistory = async () => {
+      try {
+        const res = await fetch(`/api/ai/chat/history?symbol=${symbol}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.messages?.length > 0) {
+            setMessages(data.messages.map((m: any) => ({
+              role: m.role,
+              content: m.content,
+            })));
+          }
+        }
+      } catch {
+        // Silent fail — just start with empty chat
+      } finally {
+        setHistoryLoaded(true);
+      }
+    };
+    loadHistory();
+  }, [symbol, isLoggedIn]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,7 +145,12 @@ export default function AIChat({ symbol, commodityName, factors, isLoggedIn }: A
         <>
           {/* Messages */}
           <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
-            {messages.length === 0 ? (
+            {!historyLoaded ? (
+              <div className="flex items-center justify-center h-full">
+                <span className="loading loading-spinner loading-sm"></span>
+                <span className="ml-2 text-sm text-base-content/60">{t("chat.loadingHistory")}</span>
+              </div>
+            ) : messages.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-base-content/60 mb-4">
                   {t("chat.askAI", { commodity: commodityName })}
