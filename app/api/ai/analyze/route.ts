@@ -10,11 +10,9 @@ export async function POST(request: Request) {
   try {
     const supabase = await createClient();
 
-    // Authenticate user
+    // Auth is optional — anonymous users can view cached analysis
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: "Please log in first" }, { status: 401 });
-    }
+    void user;
 
     const { symbol } = await request.json();
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import apiClient from "@/libs/api";
 import TradingViewChart from "@/components/TradingViewChart";
 import FactorMatrix from "@/components/FactorMatrix";
 import AIChat from "@/components/AIChat";
@@ -44,14 +43,19 @@ export default function CommodityDetailClient({ symbol, name, name_zh, tv_symbol
     try {
       setLoading(true);
       setError(null);
-      const data: AnalysisData = await apiClient.post("/ai/analyze", { symbol });
+      const res = await fetch("/api/ai/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ symbol }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Analysis request failed");
+      }
+      const data: AnalysisData = await res.json();
       setAnalysis(data);
     } catch (err) {
-      // 401 is handled by apiClient interceptor (redirects to signin)
-      // Only set error for non-auth failures
-      if (err?.response?.status !== 401) {
-        setError(err instanceof Error ? err.message : "Analysis request failed");
-      }
+      setError(err instanceof Error ? err.message : "Analysis request failed");
     } finally {
       setLoading(false);
     }

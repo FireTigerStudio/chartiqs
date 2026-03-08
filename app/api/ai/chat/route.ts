@@ -131,11 +131,16 @@ User question: ${question}
 
 Requirements:
 1. Answer in clear, easy-to-understand language
-2. You may reference the currently displayed factors
-3. Do not give buy/sell recommendations
-4. Keep answer within 200 words
-5. If the question involves specific investment advice, politely decline and guide the user to ask other questions
-6. ${languageInstruction}
+2. Structure your response with clear sections:
+   - Start with a brief direct answer (1-2 sentences)
+   - Use **bold** for key terms
+   - Use bullet points for lists of factors or reasons
+   - End with a brief takeaway if appropriate
+3. You may reference the currently displayed factors
+4. Do not give buy/sell recommendations
+5. Keep answer within 250 words
+6. If the question involves specific investment advice, politely decline and guide the user to ask other questions
+7. ${languageInstruction}
 
 Tone: Professional but friendly, like a teacher educating a student`;
 
