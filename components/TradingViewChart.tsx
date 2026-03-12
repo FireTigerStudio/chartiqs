@@ -15,6 +15,11 @@ function TradingViewChart({ symbol }: TradingViewChartProps) {
 
     container.innerHTML = "";
 
+    const widgetDiv = document.createElement("div");
+    widgetDiv.className = "tradingview-widget-container__widget";
+    widgetDiv.style.height = "100%";
+    widgetDiv.style.width = "100%";
+
     const script = document.createElement("script");
     script.src =
       "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
@@ -37,6 +42,7 @@ function TradingViewChart({ symbol }: TradingViewChartProps) {
       support_host: "https://www.tradingview.com",
     });
 
+    container.appendChild(widgetDiv);
     container.appendChild(script);
 
     return () => {
@@ -45,9 +51,10 @@ function TradingViewChart({ symbol }: TradingViewChartProps) {
   }, [symbol]);
 
   return (
-    <div className="tradingview-widget-container h-full w-full">
-      <div ref={containerRef} className="h-full w-full" />
-    </div>
+    <div
+      ref={containerRef}
+      className="tradingview-widget-container h-full w-full"
+    />
   );
 }
 

@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 // This function is used to create a Stripe Checkout Session (one-time payment or subscription)
 // It's called by the <ButtonCheckout /> component
-// Users must be authenticated. It will prefill the Checkout data with their email and/or credit card (if any)
+// Supports both authenticated and guest checkout (guest checkout allows Stripe reviewers to verify the payment flow)
 export async function POST(req: NextRequest) {
   const body = await req.json();
 
@@ -36,27 +36,25 @@ export async function POST(req: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) {
-      return NextResponse.json(
-        { error: "Please login to continue" },
-        { status: 401 }
-      );
-    }
-
     const { priceId, mode, successUrl, cancelUrl } = body;
 
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user?.id)
-      .single();
+    // If user is logged in, look up their profile for prefill and duplicate prevention
+    let profileData: { email?: string; customer_id?: string; has_access?: boolean } | null = null;
+    if (user) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+      profileData = data;
 
-    // Prevent duplicate purchases — already-paid users should manage via billing portal
-    if (data?.has_access) {
-      return NextResponse.json(
-        { error: "You already have an active subscription. Manage it from your account settings." },
-        { status: 400 }
-      );
+      // Prevent duplicate purchases — already-paid users should manage via billing portal
+      if (profileData?.has_access) {
+        return NextResponse.json(
+          { error: "You already have an active subscription. Manage it from your account settings." },
+          { status: 400 }
+        );
+      }
     }
 
     const stripeSessionURL = await createCheckout({
@@ -64,17 +62,16 @@ export async function POST(req: NextRequest) {
       mode,
       successUrl,
       cancelUrl,
-      // If user is logged in, it will pass the user ID to the Stripe Session so it can be retrieved in the webhook later
+      // If user is logged in, pass user ID so the webhook can link payment to account
       clientReferenceId: user?.id,
-      user: {
-        email: data?.email,
-        // If the user has already purchased, it will automatically prefill it's credit card
-        customerId: data?.customer_id,
-      },
+      user: user
+        ? {
+            email: profileData?.email,
+            customerId: profileData?.customer_id,
+          }
+        : undefined,
       // 3-day free trial for subscriptions
       trialDays: mode === "subscription" ? config.stripe.trialDays : undefined,
-      // If you send coupons from the frontend, you can pass it here
-      // couponId: body.couponId,
     });
 
     return NextResponse.json({ url: stripeSessionURL });

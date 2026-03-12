@@ -25,12 +25,6 @@ const ButtonCheckout = ({
     setIsLoading(true);
 
     try {
-      // Save pending checkout so we can resume after login redirect (if user is not logged in)
-      localStorage.setItem(
-        "pendingCheckout",
-        JSON.stringify({ priceId, mode, timestamp: Date.now() })
-      );
-
       const { url }: { url: string } = await apiClient.post(
         "/stripe/create-checkout",
         {
@@ -41,11 +35,6 @@ const ButtonCheckout = ({
         }
       );
 
-      // Clear pendingCheckout BEFORE redirecting to Stripe.
-      // It was only needed in case the API call returned 401 (not logged in)
-      // and the user got redirected to /signin first.
-      localStorage.removeItem("pendingCheckout");
-
       if (url) {
         window.location.href = url;
       } else {
@@ -53,10 +42,6 @@ const ButtonCheckout = ({
       }
     } catch (e) {
       console.error(e);
-      // Only keep pendingCheckout if user was redirected to login (401)
-      if (e?.status !== 401) {
-        localStorage.removeItem("pendingCheckout");
-      }
       toast.error(e?.message || "Payment failed. Please try again.");
     }
 
